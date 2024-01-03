@@ -19,10 +19,6 @@ class Locator {
   String trackBox = "";
 
   Future<int> initGPS() async {
-    bool enabled = await location.enableBackgroundMode(enable: true);
-
-    print("Background: $enabled");
-
     _serviceEnabled = await location.serviceEnabled();
 
     if (!_serviceEnabled) {
@@ -39,6 +35,10 @@ class Locator {
         return -2;
       }
     }
+
+    bool enabled = await location.enableBackgroundMode(enable: true);
+
+    print("Background: $enabled");
 
     _tempLocation = await location.getLocation();
     currentLocation = ValueNotifier(_tempLocation);
@@ -59,14 +59,13 @@ class Locator {
       _tempLocation = loc;
     });
 
-    _locTimer = Timer.periodic(Duration(seconds: 5), (timer) {
+    _locTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
       currentLocation = ValueNotifier(_tempLocation);
       box.add(
         Position(_tempLocation.latitude ?? 0, _tempLocation.longitude ?? 0,
                 _tempLocation.speed ?? 0)
             .toJsonString(),
       );
-      print(_tempLocation);
     });
 
     _tracking = true;

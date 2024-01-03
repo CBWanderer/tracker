@@ -16,12 +16,12 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Registro de Viajes',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Tracking App'),
+      home: const MyHomePage(title: 'Registro de Viajes'),
     );
   }
 }
@@ -91,59 +91,53 @@ class _MyHomePageState extends State<MyHomePage> {
         appBar: AppBar(
           backgroundColor: Theme.of(context).colorScheme.inversePrimary,
           title: Text(widget.title),
-          bottom: const TabBar(tabs: [
-            Tab(
-              icon: Icon(Icons.home_filled),
-            ),
-            Tab(
-              icon: Icon(Icons.account_box_outlined),
-            ),
-          ]),
         ),
-        body: TabBarView(
-          children: [
-            ValueListenableBuilder(
-                valueListenable: Hive.box('trips').listenable(),
-                builder: (context, box, widget) {
-                  var trips = box.values.toList();
-                  // box.clear();
+        body: ValueListenableBuilder(
+            valueListenable: Hive.box('trips').listenable(),
+            builder: (context, box, widget) {
+              var trips = box.values.toList();
+              // box.clear();
 
-                  return ListView.builder(
-                    itemBuilder: (context, i) {
-                      var k = box.keys.toList()[i];
-                      Trip trip = Trip.fromJsonString(trips[i]);
-                      return InkWell(
-                        onTap: () {
-                          Navigator.of(context).push(MaterialPageRoute(
-                              builder: (context) => MapScreen(id: trip.id)));
-                        },
-                        child: Card(
-                          child: ListTile(
-                            title: Text(trip.toString()),
-                            trailing: tracking && k == trackingPos
-                                ? IconButton(
-                                    icon: const Icon(Icons.pin_drop),
-                                    onPressed: () {},
-                                  )
-                                : IconButton(
-                                    icon: const Icon(Icons.delete),
-                                    onPressed: () async {
-                                      var res = await showAlertDialog(context);
-                                      if (res) {
-                                        box.deleteAt(i);
-                                      }
-                                    },
-                                  ),
-                          ),
+              if (trips.isNotEmpty) {
+                return ListView.builder(
+                  itemBuilder: (context, i) {
+                    var k = box.keys.toList()[i];
+                    Trip trip = Trip.fromJsonString(trips[i]);
+                    return InkWell(
+                      onTap: () {
+                        // print("Mapa de ${trip.id}");
+                        Navigator.of(context).push(MaterialPageRoute(
+                            builder: (context) => MapScreen(id: trip.id)));
+                      },
+                      child: Card(
+                        child: ListTile(
+                          title: Text(trip.toString()),
+                          trailing: tracking && k == trackingPos
+                              ? IconButton(
+                                  icon: const Icon(Icons.pin_drop),
+                                  onPressed: () {},
+                                )
+                              : IconButton(
+                                  icon: const Icon(Icons.delete),
+                                  onPressed: () async {
+                                    var res = await showAlertDialog(context);
+                                    if (res) {
+                                      box.deleteAt(i);
+                                    }
+                                  },
+                                ),
                         ),
-                      );
-                    },
-                    itemCount: trips.length,
-                  );
-                }),
-            const MapWidget(),
-          ],
-        ),
+                      ),
+                    );
+                  },
+                  itemCount: trips.length,
+                );
+              } else {
+                return const Center(
+                  child: Text("No hay viajes registrados"),
+                );
+              }
+            }),
         floatingActionButton: tracking
             ? FloatingActionButton(
                 onPressed: () async {
