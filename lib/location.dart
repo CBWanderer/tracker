@@ -6,6 +6,10 @@ import 'package:location/location.dart';
 import 'package:tracker/trips.dart';
 
 class Locator {
+  static final Locator _singleton = Locator._internal();
+  factory Locator() => _singleton;
+  Locator._internal();
+
   Location location = Location();
   late bool _serviceEnabled;
   bool _tracking = false;
@@ -36,9 +40,8 @@ class Locator {
       }
     }
 
-    bool enabled = await location.enableBackgroundMode(enable: true);
-
-    print("Background: $enabled");
+    await location.enableBackgroundMode(enable: true);
+    await location.changeSettings(distanceFilter: 5);
 
     _tempLocation = await location.getLocation();
     currentLocation = ValueNotifier(_tempLocation);
@@ -59,7 +62,13 @@ class Locator {
       _tempLocation = loc;
     });
 
-    _locTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+    box.add(
+      Position(_tempLocation.latitude ?? 0, _tempLocation.longitude ?? 0,
+              _tempLocation.speed ?? 0)
+          .toJsonString(),
+    );
+
+    _locTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
       currentLocation = ValueNotifier(_tempLocation);
       box.add(
         Position(_tempLocation.latitude ?? 0, _tempLocation.longitude ?? 0,
@@ -76,6 +85,7 @@ class Locator {
       Hive.box(trackBox).close();
       _subscription!.cancel();
       _locTimer!.cancel();
+      _tracking = false;
     }
   }
 }
